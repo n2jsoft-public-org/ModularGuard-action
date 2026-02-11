@@ -3,12 +3,12 @@ import * as exec from '@actions/exec'
 import type { Octokit } from '@octokit/action'
 import type { Context } from './github.js'
 import {
-    createCheckRun,
-    createOrUpdateComment,
-    downloadModularGuard,
-    findExistingComment,
-    formatComment,
-    toWorkspaceRelativePath,
+  createCheckRun,
+  createOrUpdateComment,
+  downloadModularGuard,
+  findExistingComment,
+  formatComment,
+  toWorkspaceRelativePath,
 } from './github.js'
 
 type Inputs = {

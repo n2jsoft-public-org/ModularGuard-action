@@ -10,7 +10,7 @@ try {
     modularguardVersion: core.getInput('modularguard-version', { required: false }) || 'latest',
     ...(configPathInput && { configPath: configPathInput }),
   }
-  
+
   await run(inputs, getOctokit(), await getContext())
 } catch (e) {
   core.setFailed(e instanceof Error ? e : String(e))

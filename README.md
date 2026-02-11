@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run ModularGuard
-        uses: n2jsoft-public/ModularGuard-action@v1
+        uses: n2jsoft-public/ModularGuard-action@v0
         with:
           token: ${{ github.token }}
 ```

@@ -1,0 +1,37 @@
+name: ModularGuard
+description: Analyze and enforce modular architecture boundaries in your codebase
+
+inputs:
+  directory:
+    description: 'Directory to analyze'
+    required: false
+    default: '.'
+  token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  modularguard-version:
+    description: 'ModularGuard version to use (e.g., 0.0.4 or latest)'
+    required: false
+    default: 'latest'
+  config-path:
+    description: 'Path to ModularGuard configuration file'
+    required: false
+
+outputs:
+  violations-count:
+    description: 'Total number of violations found'
+  error-count:
+    description: 'Number of error-level violations'
+  warning-count:
+    description: 'Number of warning-level violations'
+  status:
+    description: 'Analysis status: success or failure'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'shield'
+  color: 'blue'

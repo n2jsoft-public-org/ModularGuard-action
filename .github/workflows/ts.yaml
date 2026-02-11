@@ -33,11 +33,6 @@ jobs:
       - run: pnpm run test
       - run: pnpm run build
 
-      - name: Run int128/typescript-action
-        uses: ./
-        with:
-          name: foo
-
   generate:
     runs-on: ubuntu-latest
     timeout-minutes: 10

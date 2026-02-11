@@ -68,13 +68,14 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
     commit_sha: context.sha,
   })
 
-  if (pulls.length === 0) {
-    core.info('No associated pull requests found. Skipping analysis (PR-only mode).')
-    return
-  }
+  const isInPRContext = pulls.length > 0
 
-  for (const pull of pulls) {
-    core.info(`Associated pull request: ${pull.html_url}`)
+  if (isInPRContext) {
+    for (const pull of pulls) {
+      core.info(`Associated pull request: ${pull.html_url}`)
+    }
+  } else {
+    core.info('No associated pull requests found. Running analysis in non-PR mode.')
   }
 
   core.info('Downloading ModularGuard binary...')
@@ -101,22 +102,29 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
     violations: violationsWithRelativePaths,
   }
 
-  core.info('Creating check run with annotations...')
-  await createCheckRun(octokit, context.repo.owner, context.repo.repo, context.sha, resultWithRelativePaths)
+  // Print violations to console
+  printViolationsToConsole(resultWithRelativePaths)
 
-  core.info('Posting results to pull request(s)...')
-  for (const pull of pulls) {
-    const existingComment = await findExistingComment(octokit, context.repo.owner, context.repo.repo, pull.number)
-    const commentBody = formatComment(resultWithRelativePaths, runUrl)
-    await createOrUpdateComment(
-      octokit,
-      context.repo.owner,
-      context.repo.repo,
-      pull.number,
-      commentBody,
-      existingComment?.id,
-    )
-    core.info(`Comment ${existingComment ? 'updated' : 'created'} on PR #${pull.number}`)
+  if (isInPRContext) {
+    core.info('Creating check run with annotations...')
+    await createCheckRun(octokit, context.repo.owner, context.repo.repo, context.sha, resultWithRelativePaths)
+
+    core.info('Posting results to pull request(s)...')
+    for (const pull of pulls) {
+      const existingComment = await findExistingComment(octokit, context.repo.owner, context.repo.repo, pull.number)
+      const commentBody = formatComment(resultWithRelativePaths, runUrl)
+      await createOrUpdateComment(
+        octokit,
+        context.repo.owner,
+        context.repo.repo,
+        pull.number,
+        commentBody,
+        existingComment?.id,
+      )
+      core.info(`Comment ${existingComment ? 'updated' : 'created'} on PR #${pull.number}`)
+    }
+  } else {
+    core.info('Skipping PR comments and check runs (not in PR context)')
   }
 
   // Set action outputs
@@ -125,12 +133,62 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
   core.setOutput('warning-count', result.summary.warningCount)
   core.setOutput('status', result.summary.errorCount > 0 ? 'failure' : 'success')
 
-  // Fail the action if errors found
-  if (result.summary.errorCount > 0) {
-    core.setFailed(
-      `ModularGuard analysis failed: found ${result.summary.errorCount} error(s) and ${result.summary.warningCount} warning(s)`,
-    )
+  // Fail the action if violations found
+  if (result.violations.length > 0) {
+    const errorCount = result.summary.errorCount
+    const warningCount = result.summary.warningCount
+    const message = `ModularGuard analysis found ${result.violations.length} violation(s): ${errorCount} error(s) and ${warningCount} warning(s)`
+    core.setFailed(message)
+  } else {
+    core.info('✅ No violations found!')
   }
+}
+
+function printViolationsToConsole(result: ModularGuardResult): void {
+  const { summary, violations } = result
+
+  core.info('')
+  core.info('═'.repeat(80))
+  core.info('📊 MODULARGUARD ANALYSIS RESULTS')
+  core.info('═'.repeat(80))
+  core.info('')
+  core.info(`Total Modules:  ${summary.totalModules}`)
+  core.info(`Total Projects: ${summary.totalProjects}`)
+  core.info(`Errors:         ${summary.errorCount}`)
+  core.info(`Warnings:       ${summary.warningCount}`)
+  core.info(`Status:         ${summary.isValid ? '✅ Valid' : '❌ Invalid'}`)
+  core.info('')
+
+  if (violations.length === 0) {
+    core.info('✅ No violations found!')
+    core.info('═'.repeat(80))
+    return
+  }
+
+  core.info(`Found ${violations.length} violation(s):`)
+  core.info('')
+
+  violations.forEach((v, i) => {
+    const icon = v.severity === 'Error' ? '🔴' : '⚠️'
+
+    core.info(`${i + 1}. ${icon} ${v.severity}: ${v.ruleName}`)
+    core.info(`   Project:    ${v.projectName}`)
+    core.info(`   Reference:  ${v.invalidReference}`)
+    core.info(`   Location:   ${v.filePath}:${v.lineNumber}:${v.columnNumber}`)
+    core.info(`   Message:    ${v.description}`)
+
+    if (v.suggestion) {
+      core.info(`   💡 Suggestion: ${v.suggestion}`)
+    }
+
+    if (v.documentationUrl) {
+      core.info(`   📖 Documentation: ${v.documentationUrl}`)
+    }
+
+    core.info('')
+  })
+
+  core.info('═'.repeat(80))
 }
 
 async function executeModularGuard(

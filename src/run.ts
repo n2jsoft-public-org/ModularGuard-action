@@ -10,6 +10,7 @@ import {
   formatComment,
   getPullRequestFromPayload,
   toWorkspaceRelativePath,
+  writeStepSummary,
 } from './github.js'
 
 type Inputs = {
@@ -128,6 +129,10 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
 
   // Print violations to console
   printViolationsToConsole(resultWithRelativePaths)
+
+  // Write step summary
+  core.info('Writing step summary...')
+  await writeStepSummary(resultWithRelativePaths, runUrl)
 
   if (isInPRContext) {
     core.info('Creating check run with annotations...')

@@ -1,11 +1,11 @@
-import assert from 'node:assert'
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
 import * as core from '@actions/core'
 import * as tc from '@actions/tool-cache'
 import { Octokit } from '@octokit/action'
 import { retry } from '@octokit/plugin-retry'
 import type { WebhookEvent } from '@octokit/webhooks-types'
+import assert from 'node:assert'
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 
 export const getOctokit = () => new (Octokit.plugin(retry))()
 
@@ -25,6 +25,32 @@ export const getContext = async (): Promise<Context> => {
     sha: getEnv('GITHUB_SHA'),
     payload: JSON.parse(await fs.readFile(getEnv('GITHUB_EVENT_PATH'), 'utf-8')) as WebhookEvent,
   }
+}
+
+/**
+ * Extract pull request number from the event payload
+ * Returns the PR number if the event is a pull_request event, null otherwise
+ */
+export const getPullRequestNumber = (context: Context): number | null => {
+  // Type guard to check if payload is a pull_request event
+  if ('pull_request' in context.payload && context.payload.pull_request) {
+    return context.payload.pull_request.number
+  }
+  return null
+}
+
+/**
+ * Extract pull request information from the event payload
+ * Returns PR details if the event is a pull_request event, null otherwise
+ */
+export const getPullRequestFromPayload = (context: Context): { number: number; html_url: string } | null => {
+  if ('pull_request' in context.payload && context.payload.pull_request) {
+    return {
+      number: context.payload.pull_request.number,
+      html_url: context.payload.pull_request.html_url || '',
+    }
+  }
+  return null
 }
 
 const getRepo = () => {

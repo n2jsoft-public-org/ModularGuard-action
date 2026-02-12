@@ -65,7 +65,7 @@ jobs:
         with:
           directory: './src'
           token: ${{ github.token }}
-          modularguard-version: '0.0.4'
+          modularguard-version: '0.0.5'
           config-path: '.modularguard.yml'
 ```
 
@@ -75,7 +75,7 @@ jobs:
 | ------------------------ | -------- | --------- | -------------------------------------------------------- |
 | `directory`              | No       | `.`       | Directory to analyze (relative to repository root)       |
 | `token`                  | Yes      | -         | GitHub token for API access (use `${{ github.token }}`)  |
-| `modularguard-version`   | No       | `latest`  | ModularGuard version to use (e.g., `0.0.4` or `latest`)  |
+| `modularguard-version`   | No       | `latest`  | ModularGuard version to use (e.g., `0.0.5` or `latest`)  |
 | `config-path`            | No       | -         | Path to ModularGuard configuration file                  |
 
 ## Outputs
@@ -210,7 +210,7 @@ Check that your workflow has the `checks: write` permission. Annotations appear 
 
 ### Action Fails on Latest Version
 
-If `modularguard-version: latest` fails, try pinning to a specific version like `0.0.4` until a new release is available.
+If `modularguard-version: latest` fails, try pinning to a specific version like `0.0.5` until a new release is available.
 
 ## Development
 

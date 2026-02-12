@@ -8,6 +8,7 @@ import {
   downloadModularGuard,
   findExistingComment,
   formatComment,
+  getPullRequestFromPayload,
   toWorkspaceRelativePath,
 } from './github.js'
 
@@ -61,21 +62,44 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
   const workspaceRoot = process.env['GITHUB_WORKSPACE'] || process.cwd()
   const runUrl = `${process.env['GITHUB_SERVER_URL']}/${process.env['GITHUB_REPOSITORY']}/actions/runs/${process.env['GITHUB_RUN_ID']}`
 
-  core.info('Finding associated pull requests...')
-  const { data: pulls } = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    commit_sha: context.sha,
-  })
+  core.info('Detecting pull request context...')
+
+  // Try to get PR info from the event payload first (for pull_request events)
+  const pullFromPayload = getPullRequestFromPayload(context)
+  let pulls: Array<{ number: number; html_url: string }> = []
+
+  if (pullFromPayload) {
+    core.info(`Pull request detected from event payload: #${pullFromPayload.number}`)
+    core.info(`Pull request URL: ${pullFromPayload.html_url}`)
+    pulls = [pullFromPayload]
+  } else {
+    // Fallback: query GitHub API for PRs associated with this commit (e.g., for push events)
+    core.info('Not a pull_request event, searching for associated pull requests...')
+    try {
+      const { data: associatedPRs } = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        commit_sha: context.sha,
+      })
+
+      if (associatedPRs.length > 0) {
+        core.info(`Found ${associatedPRs.length} associated pull request(s) via API`)
+        pulls = associatedPRs.map((pr) => ({ number: pr.number, html_url: pr.html_url }))
+        for (const pull of pulls) {
+          core.info(`  - PR #${pull.number}: ${pull.html_url}`)
+        }
+      } else {
+        core.info('No associated pull requests found.')
+      }
+    } catch (error) {
+      core.warning(`Failed to query associated PRs: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
 
   const isInPRContext = pulls.length > 0
 
-  if (isInPRContext) {
-    for (const pull of pulls) {
-      core.info(`Associated pull request: ${pull.html_url}`)
-    }
-  } else {
-    core.info('No associated pull requests found. Running analysis in non-PR mode.')
+  if (!isInPRContext) {
+    core.info('Running analysis in non-PR mode (no pull request context detected).')
   }
 
   core.info('Downloading ModularGuard binary...')

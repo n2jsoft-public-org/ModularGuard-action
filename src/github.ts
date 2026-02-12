@@ -27,6 +27,32 @@ export const getContext = async (): Promise<Context> => {
   }
 }
 
+/**
+ * Extract pull request number from the event payload
+ * Returns the PR number if the event is a pull_request event, null otherwise
+ */
+export const getPullRequestNumber = (context: Context): number | null => {
+  // Type guard to check if payload is a pull_request event
+  if ('pull_request' in context.payload && context.payload.pull_request) {
+    return context.payload.pull_request.number
+  }
+  return null
+}
+
+/**
+ * Extract pull request information from the event payload
+ * Returns PR details if the event is a pull_request event, null otherwise
+ */
+export const getPullRequestFromPayload = (context: Context): { number: number; html_url: string } | null => {
+  if ('pull_request' in context.payload && context.payload.pull_request) {
+    return {
+      number: context.payload.pull_request.number,
+      html_url: context.payload.pull_request.html_url || '',
+    }
+  }
+  return null
+}
+
 const getRepo = () => {
   const [owner, repo] = getEnv('GITHUB_REPOSITORY').split('/')
   assert(owner, 'GITHUB_REPOSITORY must have an owner part')

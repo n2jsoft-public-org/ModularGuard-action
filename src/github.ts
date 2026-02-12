@@ -410,3 +410,84 @@ function mapSeverityToLevel(severity: string): 'failure' | 'warning' | 'notice' 
       return 'notice'
   }
 }
+
+/**
+ * Write ModularGuard results to GitHub Actions step summary
+ */
+export async function writeStepSummary(result: ModularGuardResult, runUrl?: string): Promise<void> {
+  try {
+    const { summary, violations } = result
+    const hasErrors = summary.errorCount > 0
+    const hasWarnings = summary.warningCount > 0
+
+    // Add heading
+    core.summary.addHeading('ModularGuard Analysis Results', 2)
+
+    // Status badge
+    if (hasErrors) {
+      core.summary.addRaw('❌ **Analysis Failed**\n\n')
+    } else if (hasWarnings) {
+      core.summary.addRaw('⚠️ **Analysis Passed with Warnings**\n\n')
+    } else {
+      core.summary.addRaw('✅ **Analysis Passed**\n\n')
+    }
+
+    // Summary statistics
+    core.summary.addHeading('Summary', 3)
+    core.summary.addRaw(`- **Total Modules:** ${summary.totalModules}\n`)
+    core.summary.addRaw(`- **Total Projects:** ${summary.totalProjects}\n`)
+    core.summary.addRaw(`- **Errors:** ${summary.errorCount}\n`)
+    core.summary.addRaw(`- **Warnings:** ${summary.warningCount}\n\n`)
+
+    // Violations table
+    if (violations.length > 0) {
+      core.summary.addHeading('Violations', 3)
+
+      // Prepare table data
+      const tableData = [
+        [
+          { data: 'Severity', header: true },
+          { data: 'File:Line', header: true },
+          { data: 'Project', header: true },
+          { data: 'Invalid Reference', header: true },
+          { data: 'Description', header: true },
+        ],
+        ...violations.map((violation) => {
+          const severityIcon = violation.severity === 'Error' ? '🔴' : '⚠️'
+          const fileLocation = `${violation.filePath}:${violation.lineNumber}`
+          const description = violation.description.replace(/\n/g, ' ').substring(0, 100)
+
+          return [
+            `${severityIcon} ${violation.severity}`,
+            fileLocation,
+            violation.projectName,
+            violation.invalidReference,
+            description,
+          ]
+        }),
+      ]
+
+      core.summary.addTable(tableData)
+
+      // Suggestions section if any violations have suggestions
+      const violationsWithSuggestions = violations.filter((v) => v.suggestion)
+      if (violationsWithSuggestions.length > 0) {
+        core.summary.addRaw('\n<details>\n<summary>💡 Suggestions</summary>\n\n')
+        for (const violation of violationsWithSuggestions) {
+          core.summary.addRaw(`**${violation.projectName} → ${violation.invalidReference}**\n`)
+          core.summary.addRaw(`${violation.suggestion}\n\n`)
+        }
+        core.summary.addRaw('</details>\n\n')
+      }
+    }
+
+    if (runUrl) {
+      core.summary.addRaw(`---\n\n[View detailed results](${runUrl})\n`)
+    }
+
+    // Write the summary
+    await core.summary.write()
+  } catch (error) {
+    core.warning(`Failed to write step summary: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}

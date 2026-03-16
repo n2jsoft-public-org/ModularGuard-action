@@ -48,9 +48,9 @@ type ModularGuardViolation = {
   description: string
   suggestion?: string
   documentationUrl?: string
-  filePath: string
-  lineNumber: number
-  columnNumber: number
+  filePath?: string
+  lineNumber?: number
+  columnNumber?: number
 }
 
 type ModularGuardResult = {
@@ -85,7 +85,10 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
 
       if (associatedPRs.length > 0) {
         core.info(`Found ${associatedPRs.length} associated pull request(s) via API`)
-        pulls = associatedPRs.map((pr) => ({ number: pr.number, html_url: pr.html_url }))
+        pulls = associatedPRs.map((pr) => ({
+          number: pr.number,
+          html_url: pr.html_url,
+        }))
         for (const pull of pulls) {
           core.info(`  - PR #${pull.number}: ${pull.html_url}`)
         }
@@ -119,7 +122,7 @@ export const run = async (inputs: Inputs, octokit: Octokit, context: Context): P
   // Convert absolute paths to workspace-relative
   const violationsWithRelativePaths = result.violations.map((v) => ({
     ...v,
-    filePath: toWorkspaceRelativePath(v.filePath, workspaceRoot),
+    ...(v.filePath ? { filePath: toWorkspaceRelativePath(v.filePath, workspaceRoot) } : {}),
   }))
 
   const resultWithRelativePaths: ModularGuardResult = {

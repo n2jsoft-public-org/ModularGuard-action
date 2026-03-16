@@ -73,9 +73,9 @@ type ModularGuardViolation = {
   description: string
   suggestion?: string
   documentationUrl?: string
-  filePath: string
-  lineNumber: number
-  columnNumber: number
+  filePath?: string
+  lineNumber?: number
+  columnNumber?: number
 }
 
 type ModularGuardResult = {
@@ -363,19 +363,25 @@ export async function createCheckRun(
   }
 
   // Map violations to annotations (GitHub API limit: 50 annotations per call)
-  const annotations = violations.slice(0, 50).map((violation) => ({
-    path: violation.filePath,
-    start_line: violation.lineNumber,
-    end_line: violation.lineNumber,
-    start_column: violation.columnNumber,
-    end_column: violation.columnNumber,
+  // Only include violations that have a file path and line number (some violations are project-level only)
+  const annotatableViolations = violations.filter((v) => v.filePath != null && v.lineNumber != null)
+  const annotations = annotatableViolations.slice(0, 50).map((violation) => ({
+    path: violation.filePath as string,
+    start_line: violation.lineNumber as number,
+    end_line: violation.lineNumber as number,
+    ...(violation.columnNumber != null
+      ? {
+          start_column: violation.columnNumber,
+          end_column: violation.columnNumber,
+        }
+      : {}),
     annotation_level: mapSeverityToLevel(violation.severity),
     message: violation.description,
     title: `${violation.ruleName}: ${violation.projectName} → ${violation.invalidReference}`,
   }))
 
-  if (violations.length > 50) {
-    summaryText += `\n\n⚠️ Note: Only showing the first 50 annotations. ${violations.length - 50} additional violation(s) not shown.`
+  if (annotatableViolations.length > 50) {
+    summaryText += `\n\n⚠️ Note: Only showing the first 50 annotations. ${annotatableViolations.length - 50} additional violation(s) not shown.`
   }
 
   try {

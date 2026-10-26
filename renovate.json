@@ -14,7 +14,7 @@
   "ignorePaths": ["**/dist/**"],
   "packageRules": [
     {
-      "description": "The action runs on node20 (action.yaml), so keep Node and its types on that major",
+      "description": "The action runs on node24 (action.yaml), so keep Node and its types on that major",
       "matchPackageNames": ["node", "@types/node"],
       "matchUpdateTypes": ["major"],
       "enabled": false

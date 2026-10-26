@@ -16,16 +16,16 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.2",
     "@octokit/webhooks-types": "7.6.1",
-    "@tsconfig/node20": "20.1.8",
+    "@tsconfig/node24": "24.0.5",
     "@tsconfig/strictest": "2.0.8",
-    "@types/node": "20.19.30",
+    "@types/node": "24.19.2",
     "@vercel/ncc": "0.38.4",
     "pnpm": "12.15.0",
     "typescript": "5.9.3",
     "vitest": "4.0.18"
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "packageManager": "pnpm@12.15.0"
 }

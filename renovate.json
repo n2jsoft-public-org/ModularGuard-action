@@ -1,9 +1,39 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>int128/renovate-base",
-    "github>int128/typescript-action-renovate-config#v1.10.0",
-    "helpers:pinGitHubActionDigests"
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":prHourlyLimit2",
+    "helpers:pinGitHubActionDigests",
+    "schedule:weekly",
+    "security:minimumReleaseAgeNpm"
   ],
-  "platformAutomerge": true
+  "labels": ["dependencies"],
+  "timezone": "Europe/Paris",
+  "ignorePaths": ["**/dist/**"],
+  "packageRules": [
+    {
+      "description": "The action runs on node20 (action.yaml), so keep Node and its types on that major",
+      "matchPackageNames": ["node", "@types/node"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "ncc (the dist bundler) does not support TypeScript 7 (native compiler) yet: stay below 7 until it does",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
+      "description": "Group all GitHub Actions bumps into one PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Auto-merge non-major updates once required CI checks pass: Renovate merges them itself, after rebasing and retesting, with its bypass of the review required by the PR ruleset",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "automerge": true,
+      "platformAutomerge": false
+    }
+  ]
 }

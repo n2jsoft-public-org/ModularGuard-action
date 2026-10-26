@@ -12,6 +12,21 @@
   "labels": ["dependencies"],
   "timezone": "Europe/Paris",
   "ignorePaths": ["**/dist/**"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Default ModularGuard version shipped by the action, and its mentions in the README",
+      "managerFilePatterns": ["/^action\\.yaml$/", "/^README\\.md$/"],
+      "matchStrings": [
+        "# renovate: modularguard\\s+default: '(?<currentValue>[^']+)'",
+        "\\| `modularguard-version`\\s+\\| No\\s+\\| `(?<currentValue>[^`]+)`",
+        "modularguard-version: '(?<currentValue>\\d+\\.\\d+\\.\\d+)'"
+      ],
+      "depNameTemplate": "n2jsoft-public-org/ModularGuard",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    }
+  ],
   "packageRules": [
     {
       "description": "The action runs on node24 (action.yaml), so keep Node and its types on that major",
@@ -34,6 +49,12 @@
       "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true,
       "platformAutomerge": false
+    },
+    {
+      "description": "ModularGuard is still 0.x, where any bump can change the JSON output the action parses, and CI does not run the real binary: review those PRs by hand",
+      "matchDepNames": ["n2jsoft-public-org/ModularGuard"],
+      "matchCurrentVersion": "/^0\\./",
+      "automerge": false
     }
   ]
 }

@@ -65,7 +65,7 @@ jobs:
         with:
           directory: './src'
           token: ${{ github.token }}
-          modularguard-version: '0.0.5'
+          modularguard-version: '0.0.14'
           config-path: '.modularguard.yml'
 ```
 
@@ -75,7 +75,7 @@ jobs:
 | ------------------------ | -------- | --------- | -------------------------------------------------------- |
 | `directory`              | No       | `.`       | Directory to analyze (relative to repository root)       |
 | `token`                  | Yes      | -         | GitHub token for API access (use `${{ github.token }}`)  |
-| `modularguard-version`   | No       | `latest`  | ModularGuard version to use (e.g., `0.0.5` or `latest`)  |
+| `modularguard-version`   | No       | `0.0.14`  | ModularGuard version: a release version or `latest`      |
 | `config-path`            | No       | -         | Path to ModularGuard configuration file                  |
 
 ## Outputs
@@ -208,9 +208,9 @@ Ensure your workflow has the `pull-requests: write` permission. Also verify that
 
 Check that your workflow has the `checks: write` permission. Annotations appear in the Files Changed tab of the pull request.
 
-### Action Fails on Latest Version
+### Action Fails After a ModularGuard Release
 
-If `modularguard-version: latest` fails, try pinning to a specific version like `0.0.5` until a new release is available.
+If a new ModularGuard release breaks the action (for example with `modularguard-version: latest`), pin `modularguard-version` to the previous release until a fix is available.
 
 ## Development
 

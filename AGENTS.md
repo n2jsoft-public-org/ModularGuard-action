@@ -16,7 +16,7 @@ The action automates the process of:
 
 ### Technology Stack
 
-- **Runtime**: Node.js 20.x
+- **Runtime**: Node.js 24.x
 - **Language**: TypeScript (strict mode)
 - **Template**: Based on [int128/typescript-action](https://github.com/int128/typescript-action)
 - **Build Tool**: Vercel ncc (compiles to single `dist/index.js`)

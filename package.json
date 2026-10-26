@@ -22,7 +22,7 @@
     "@vercel/ncc": "0.38.4",
     "pnpm": "12.15.0",
     "typescript": "5.9.3",
-    "vitest": "4.0.18"
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": "24.x"

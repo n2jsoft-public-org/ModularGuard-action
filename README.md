@@ -65,7 +65,7 @@ jobs:
         with:
           directory: './src'
           token: ${{ github.token }}
-          modularguard-version: '0.0.14'
+          modularguard-version: '0.0.18'
           config-path: '.modularguard.yml'
 ```
 
@@ -75,7 +75,7 @@ jobs:
 | ------------------------ | -------- | --------- | -------------------------------------------------------- |
 | `directory`              | No       | `.`       | Directory to analyze (relative to repository root)       |
 | `token`                  | Yes      | -         | GitHub token for API access (use `${{ github.token }}`)  |
-| `modularguard-version`   | No       | `0.0.14`  | ModularGuard version: a release version or `latest`      |
+| `modularguard-version`   | No       | `0.0.18`  | ModularGuard version: a release version or `latest`      |
 | `config-path`            | No       | -         | Path to ModularGuard configuration file                  |
 
 ## Outputs

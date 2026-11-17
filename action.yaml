@@ -14,7 +14,7 @@ inputs:
     description: 'ModularGuard version to use: a release version without the v prefix, or latest'
     required: false
     # renovate: modularguard
-    default: '0.0.14'
+    default: '0.0.18'
   config-path:
     description: 'Path to ModularGuard configuration file'
     required: false
